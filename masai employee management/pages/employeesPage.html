@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./navbar.css" />
+    <title>Document</title>
+    <style>
+      .table {
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      table {
+        border: 1px solid red;
+        width: 70vw;
+        text-align: center;
+      }
+
+      thead {
+        height: 40px;
+        background-color: teal;
+      }
+
+      tbody > tr {
+        height: 30px;
+        background-color: gray;
+      }
+      td {
+        padding: 5px 10px;
+        font-size: 20px;
+        width: 100px;
+        height: 100px;
+      }
+      .utility {
+        width: 70vw;
+        height: 100px;
+        border: 1px solid red;
+        margin: auto;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+      }
+      .search > input {
+        border-radius: 5px;
+        padding: 5px 10px;
+        width: 300px;
+        height: 40px;
+      }
+      .utility > div > select {
+        width: 150px;
+        height: 40px;
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 5px;
+      }
+      img {
+        width: inherit;
+      }
+      .pagination {
+        width: 70vw;
+        height: 70px;
+        /* border: 1px solid red; */
+        margin: auto;
+        margin-top: 20px;
+        /* align-content: center; */
+        text-align: center;
+      }
+      .pagination > button {
+        width: 50px;
+        height: 50px;
+        background-color: teal;
+        border-radius: 5px;
+        /* border: 1px solid red; */
+        margin-left: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <div class="leftNavbar">MASAI EMPLOYEE LIST</div>
+      <div class="rightNavbar">
+        <div><a href="./index.html"> HOMEPAGE</a></div>
+        <div><a href="./employeesPage.html"> EMPLOYEE</a></div>
+        <div><a href="./login.html"> LOGIN</a></div>
+        <div><a href="./Register.html"> REGISTER</a></div>
+      </div>
+    </div>
+    <div class="utility">
+      <div class="search">
+        <input type="text" id="search" placeholder="search any employes name" />
+      </div>
+      <div class="sort">
+        <select name="" id="select">
+          <option>Sort By Salary</option>
+          <option value="lh">Low to High</option>
+          <option value="hl">High to Low</option>
+        </select>
+      </div>
+      <div class="filter" id="filter">
+        <select name="" id="select">
+          <option>Filter By Departement</option>
+          <option value="Training">Training</option>
+          <option value="Product Management">Product Management</option>
+          <option value="Business Development">Business Development</option>
+          <option value="Research and Development">
+            Research and Development
+          </option>
+          <option value="Services">Services</option>
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <div class="table">
+        <table>
+          <thead>
+            <tr>
+              <th>sr.No.</th>
+              <th>Image</th>
+              <th>Name</th>
+              <th>Department</th>
+              <th>Gender</th>
+              <th>Salery</th>
+            </tr>
+          </thead>
+          <tbody id="bodyTable"></tbody>
+        </table>
+      </div>
+      <div class="pagination"></div>
+    </div>
+  </body>
+</html>
+
+<script>
+  var tokenObj = JSON.parse(localStorage.getItem("token"));
+
+  async function api(page, filterBy, sort) {
+    try {
+      console.log(page, "page status", tokenObj);
+      if (!page) {
+        var res = await fetch(
+          "https://dbioz2ek0e.execute-api.ap-south-1.amazonaws.com/mockapi/get-employees"
+        );
+      } else {
+        var res = await fetch(
+          // `https://dbioz2ek0e.execute-api.ap-south-1.amazonaws.com/mockapi/get-employees/page=${page}`,
+          "https://dbioz2ek0e.execute-api.ap-south-1.amazonaws.com/mockapi/get-employees/orderBy=asc",
+          {
+            method: "GET",
+            headers: { Authorization: "Bearer" + tokenObj.token },
+            mode: "cors",
+          }
+        );
+      }
+      res = await res.json();
+      data = res.data;
+      totalPages = res.totalPages;
+      console.log(res, "emplu");
+      mapTable(data, totalPages);
+
+      // var filterBy ;
+      //filterring
+      document
+        .getElementById("filter")
+        .addEventListener("change", (e) => myFilter(e, data, totalPages));
+      // sorting data
+      document
+        .getElementById("select")
+        .addEventListener("change", (e) => mySort(e, data, totalPages));
+      // searching name
+      document
+        .getElementById("search")
+        .addEventListener("submit", (e) => mySearch(e, data, totalPages));
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  api((page = 0));
+
+  // sorting dnatiopn
+  function mySort(e, data, totalPages) {
+    if (e.target.value == "lh") {
+      var sortedData = data.sort((a, b) => a.salary - b.salary);
+    } else {
+      var sortedData = data.sort((a, b) => b.salary - a.salary);
+    }
+    mapTable(sortedData);
+  }
+
+  // filtering  defination
+  function myFilter(e, data, totalPages) {
+    var filterBy = e.target.value;
+    var filterData = data.filter((e) => e.department == filterBy);
+    mapTable(filterData);
+  }
+
+  // searching defination
+  function mySearch(e, totalPages) {
+    var searchData = data.filter((e) => e.name == e.target.value);
+    mapTable(searchData);
+  }
+
+  // maping data
+  function mapTable(data, totalPages) {
+    document.getElementById("bodyTable").innerHTML = "";
+    // calling pagination
+    pagination(totalPages);
+
+    data.map((e) => {
+      var tr = document.createElement("tr");
+
+      var td1 = document.createElement("td");
+      td1.innerText = `${e.id}`;
+
+      var td2 = document.createElement("td");
+      var td2Img = document.createElement("img");
+      td2Img.setAttribute(
+        "src",
+        "https://www.tamus.edu/academic/wp-content/uploads/sites/24/2021/04/img-person-placeholder.jpg"
+      );
+
+      var td3 = document.createElement("td");
+      td3.innerText = `${e.name}`;
+
+      var td4 = document.createElement("td");
+      td4.innerText = `${e.department}`;
+
+      var td5 = document.createElement("td");
+      td5.innerText = `${e.gender}`;
+
+      var td6 = document.createElement("td");
+      td6.innerText = `${e.salary}`;
+      td2.append(td2Img);
+      tr.append(td1, td2, td3, td4, td5, td6);
+      tr.append(td6);
+      document.getElementById("bodyTable").append(tr);
+    });
+  }
+
+  function pagination(totalPages, filterBy) {
+    var x = document.getElementsByClassName("pagination")[0];
+    // console.log(x);
+    x.innerHTML = "";
+
+    for (let i = 0; i < totalPages; i++) {
+      var btn = document.createElement("button");
+      btn.innerText = `${i + 1}`;
+      btn.addEventListener("click", (e) => mypage(e, filterBy));
+      x.append(btn);
+    }
+  }
+
+  function mypage(e, filterBy) {
+    var page = Number(e.target.innerText);
+    api(page, filterBy);
+    console.log(page);
+  }
+</script>

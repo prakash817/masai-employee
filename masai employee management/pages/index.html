@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./navbar.css" />
+    <title>Document</title>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+      .homepage {
+        width: 100%;
+        height: 100vh;
+        display: flex;
+      }
+      .left {
+        flex: 8;
+        border: 1px solid red;
+      }
+      .right {
+        flex: 4;
+        border: 1px solid red;
+      }
+      .card {
+        display: flex;
+        flex-direction: column;
+        align-items: space-between;
+        padding: 15px 5px;
+        background-color: coral;
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+      }
+      .card > div {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .card > div > span:last-child {
+        color: teal;
+        text-align: right;
+      }
+      .left {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <div class="leftNavbar">MASAI EMPLOYEE LIST</div>
+      <div class="rightNavbar">
+        <div><a href="./index.html"> HOMEPAGE</a></div>
+        <div><a href="./employeesPage.html"> EMPLOYEE</a></div>
+        <div><a href="./login.html"> LOGIN</a></div>
+        <div><a href="./Register.html"> REGISTER</a></div>
+      </div>
+    </div>
+    <div class="homepage">
+      <div class="left">
+        <h1>Welcome to page</h1>
+      </div>
+      <div class="right">
+        <div class="card">
+          <div><span>Name:</span> <span id="name"></span></div>
+          <div><span>E-Mail:</span><span id="email"></span></div>
+          <div><span>UserName:</span><span id="username"></span></div>
+          <div><span>Mobile:</span><span id="mobile"></span></div>
+          <div><span>Description:</span><span id="desc"></span></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+
+<script>
+  var token = JSON.parse(localStorage.getItem("token"));
+  async function apiCall() {
+    try {
+      var res = await fetch(
+        "https://masai-api-mocker.herokuapp.com/user/" + token.username,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token.token}` },
+          mode: "cors",
+        }
+      );
+      res = await res.json();
+      appnedProfile(res);
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
+    console.log(token);
+  }
+  apiCall();
+
+  function appnedProfile(profileData) {
+    document.getElementById("name").innerText = `${profileData.name}`;
+    document.getElementById("email").innerText = `${profileData.email}`;
+    document.getElementById("username").innerText = `${profileData.username}`;
+    document.getElementById("mobile").innerText = `${profileData.mobile}`;
+    document.getElementById("desc").innerText = `${profileData.description}`;
+  }
+</script>
